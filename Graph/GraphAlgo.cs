@@ -2,7 +2,7 @@ namespace AlgoApp.Graph;
 
 public static class GraphAlgo 
 {
-    static readonly Dictionary<string, List<string>?> ExampleGraph = new()
+    static readonly Dictionary<string, List<string>?> ExampleDirectedGraph = new()
     {
         {"a", new List<string> { "b", "c", "g"}},
         {"b", new List<string> { "d", "e"}},
@@ -16,6 +16,19 @@ public static class GraphAlgo
         {"z", null},
     };
 
+    static readonly Dictionary<string, List<string>?> ExampleUnDirectedGraph = new()
+    {
+        {"d", new List<string> {"b"}},
+        {"e", new List<string> {"b"}},
+        {"a", new List<string> { "b", "c"}},
+        {"b", new List<string> { "a","d", "e"}},
+        {"c", new List<string> { "a","f"}}, 
+        {"f", new List<string> {"c"}},
+        {"g", new List<string> {"i", "j"}},
+        {"i", new List<string> {"g"}},
+        {"j", new List<string> {"g"}},
+        {"z", null},
+    };
     static readonly List<List<string>> ExampleArrayOfEdges = new List<List<string>> 
     {
         new List<string> {"i", "j"},
@@ -133,14 +146,55 @@ public static class GraphAlgo
             if(visitedNodes.Any(x => x.Equals(node)))
                 continue;
 
-            TransverseConnectedComponentsCount(graph,node,visitedNodes);
+            TransverseConnectedComponents(graph,node,visitedNodes);
             connectedComponentCount++;
         }
 
         return connectedComponentCount;
     }
 
-    public static void TransverseConnectedComponentsCount (Dictionary<string, List<string>?> graph, string startNode, HashSet<string> visitedNodes)
+    /// <summary>
+    /// Write a function largestComponent that takes an adjacency list of an undirected graph. The function should return the size of 
+    /// the largest connected components in the graph
+    /// </summary>
+    /// <param name="graph"></param>
+    /// <returns></returns>
+    public static int GetLargestComponent(Dictionary<string, List<string>?> graph)
+    {
+        var largestSize = 0;
+        var visitedNodes = new HashSet<string>();
+
+        foreach(var node in graph.Keys)
+        {
+            if(visitedNodes.Any(x => x.Equals(node)))
+                continue;
+
+            var connectedComponentsNodeCount = CountNodesInConnectedComponent(graph,node,visitedNodes);
+
+            largestSize = largestSize > connectedComponentsNodeCount ? largestSize : connectedComponentsNodeCount;
+        };
+
+        return largestSize;
+    }
+
+
+    private static int CountNodesInConnectedComponent (Dictionary<string, List<string>?> graph, string startNode, HashSet<string> visitedNodes, int count = 1)
+    {
+        if(visitedNodes.TryGetValue(startNode,out string val))
+            return 0;
+            
+        visitedNodes.Add(startNode);
+        if(graph[startNode] == null) return count;
+
+        foreach(var edge in graph[startNode]!)
+        {
+            count += CountNodesInConnectedComponent(graph,edge,visitedNodes, 1);
+        }
+
+        return count;
+    }
+
+    private static void TransverseConnectedComponents (Dictionary<string, List<string>?> graph, string startNode, HashSet<string> visitedNodes)
     {
         if(!visitedNodes.TryGetValue(startNode,out string val))
             visitedNodes.Add(startNode);
@@ -149,11 +203,11 @@ public static class GraphAlgo
 
         foreach(var edge in graph[startNode])
         {
-            TransverseConnectedComponentsCount(graph,edge,visitedNodes);
+            TransverseConnectedComponents(graph,edge,visitedNodes);
         }
     }
 
-    public static bool HasPath(Dictionary<string, List<string>?> graph, string src, string dest, HashSet<string> visitedNodes)
+    private static bool HasPath(Dictionary<string, List<string>?> graph, string src, string dest, HashSet<string> visitedNodes)
     {
         if(visitedNodes.TryGetValue(src,out string val)) return false;
 
@@ -171,7 +225,7 @@ public static class GraphAlgo
         return false;
     }
 
-    public static Dictionary<string, List<string>?> ConvertArrayOfEdgesToGraph(List<List<string>> arrayOfEdges)
+    private static Dictionary<string, List<string>?> ConvertArrayOfEdgesToGraph(List<List<string>> arrayOfEdges)
     {
         var adjacencyList = new  Dictionary<string, List<string>?>();
         foreach(var edges in arrayOfEdges)
@@ -186,12 +240,13 @@ public static class GraphAlgo
         }
         return adjacencyList;
     }
+
     public static void TestGraphAlgo()
     {
-        BreadthFirstTransversal(ExampleGraph, "a");
-        DepthFirstTransversal(ExampleGraph, "a");
-        var depthFirstHasPath = DepthFirstHasPath(ExampleGraph, "a","j");
-        var breadthFirstHasPath = BreadthFirstHasPath(ExampleGraph, "a","j");
+        BreadthFirstTransversal(ExampleDirectedGraph, "a");
+        DepthFirstTransversal(ExampleDirectedGraph, "a");
+        var depthFirstHasPath = DepthFirstHasPath(ExampleDirectedGraph, "a","j");
+        var breadthFirstHasPath = BreadthFirstHasPath(ExampleDirectedGraph, "a","j");
         Console.WriteLine($"depthFirstHasPath => Expected:True; Actual:{depthFirstHasPath}");
         Console.WriteLine($"breadthFirstHasPath => Expected:True; Actual:{breadthFirstHasPath}");
 
@@ -201,8 +256,11 @@ public static class GraphAlgo
         pathExist = BreadFirstUndirectedPath(ExampleArrayOfEdges, "i","o");
         Console.WriteLine($"BreadFirstUndirectedPath => Expected:False; Actual:{pathExist}");
 
-        var connectedComponentCount = GetConnectedComponentsCount(ExampleGraph);
-        Console.WriteLine(connectedComponentCount);
+        var connectedComponentCount = GetConnectedComponentsCount(ExampleDirectedGraph);
+        Console.WriteLine($"GetConnectedComponentsCount => Expected: 2; Actual:{connectedComponentCount}");
+
+        var largestComponentSize = GetLargestComponent(ExampleUnDirectedGraph);
+        Console.WriteLine($"GetLargestComponent => Expected:6, Actual:{largestComponentSize}");
 
     }
 }
