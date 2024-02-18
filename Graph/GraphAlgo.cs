@@ -31,11 +31,11 @@ public static class GraphAlgo
     };
     static readonly List<List<string>> ExampleArrayOfEdges = new List<List<string>> 
     {
-        new List<string> {"i", "j"},
-        new List<string> {"k", "i"},
-        new List<string> {"m", "k"},
-        new List<string> {"k", "l"},
-        new List<string> {"o", "n"},
+        new() {"i", "j"},
+        new() {"k", "i"},
+        new() {"m", "k"},
+        new() {"k", "l"},
+        new() {"o", "n"},
     };
 
     public static void BreadthFirstTransversal(Dictionary<string, List<string>?>  graph, string start)
@@ -177,7 +177,126 @@ public static class GraphAlgo
         return largestSize;
     }
 
+    /// <summary>
+    /// Write a function shortestPath that takes in an array of edges for an undirected graph and two nodes (nodeA,nodeB).
+    /// The function should return the length of the shortest path between A and B. Consider the length as the number of edges in the path not the number of nodes.
+    /// if there is no path between A and B return -1.
+    /// </summary>
+    /// <param name="graph"></param>
+    /// <param name="src"></param>
+    /// <param name="dest"></param>
+    /// <returns></returns>
+    public static int GetShortestPath(List<List<string>> edges, string src, string dest)
+    {
+        var graph = ConvertArrayOfEdgesToGraph(edges);
+        var queue = new Queue<string>();
+        queue.Enqueue(src);
+        var distanceMap = new Dictionary<string, int>
+        {
+            { src, 0 }
+        };
+        var visitedNodes = new HashSet<string>();
 
+        while(queue.Any())
+        {
+            var currentNode = queue.Dequeue();
+            visitedNodes.Add(currentNode);
+            var currentNodeDistanceFromSrc = distanceMap[currentNode];
+
+            if(currentNode == dest )
+                return currentNodeDistanceFromSrc;
+
+            if(graph[currentNode] == null) continue;
+
+            foreach(var neighbour in graph[currentNode]!)
+            {
+                if(visitedNodes.Contains(neighbour)) 
+                    continue;
+
+                queue.Enqueue(neighbour);
+                distanceMap.Add(neighbour, currentNodeDistanceFromSrc + 1);
+            }
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    /// Given an m x n 2D binary grid grid which represents a map of '1's (land) and '0's (water), return the number of islands.
+    /// An island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically. 
+    /// You may assume all four edges of the grid are all surrounded by water.
+    /// Example 1:
+    /// Input: grid = 
+    ///  [
+    ///     ["1","1","1","1","0"],
+    ///     ["1","1","0","1","0"],
+    ///     ["1","1","0","0","0"],
+    ///     ["0","0","0","0","0"]
+    ///  ]
+    /// Output: 1
+    /// </summary>
+    /// <param name="matrixGraph"></param>
+    /// <returns></returns>
+
+    public static int GetIslandCount (List<List<int>> matrixGraph)
+    {
+        var visitedNodes = new List<string>();
+        var islandCount = 0;
+        for(var y = 0;  y <  matrixGraph.Count(); y++ )
+        {
+            for(var x = 0; x<  matrixGraph[y].Count(); x++)
+            {
+                var hasIsland = Transverse2DMaxtrix(matrixGraph,y,x,visitedNodes);
+                if(hasIsland) islandCount++;
+            }
+        }
+        return islandCount;
+    }
+
+    private static bool Transverse2DMaxtrix(List<List<int>> matrixGraph,int y,int x, List<string> visitedNodes)
+    {
+        var maxY = matrixGraph.Count() - 1;
+        var maxX = matrixGraph[0].Count() - 1;
+        var neighboursMap = new Dictionary<int, Func<int, int,int, (int y,int x )>>
+        {
+            {1, (int index, int y, int x)=> (y+1,x) },
+            {2, (int index, int y, int x)=> (y-1,x) },
+            {3, (int index, int y, int x)=> (y,x+1) },
+            {4, (int index, int y, int x)=> (y,x-1) },
+        };
+
+        var queue = new Queue<string>();
+        queue.Enqueue($"{x},{y}");
+
+        var hasIsland = false;
+        while (queue.Any())
+        {
+            var currentNode = queue.Dequeue();
+            if(visitedNodes.Contains(currentNode))
+                continue;
+
+            visitedNodes.Add(currentNode);
+            y = Convert.ToInt16(currentNode.Split(",")[1]);
+            x = Convert.ToInt16(currentNode.Split(",")[0]);
+
+            var currentNodeValue = matrixGraph[y][x];
+            hasIsland = currentNodeValue == 1;
+            
+            for(var i = 1; i<= 4; i++)
+            {
+                var (yIndex,xIndex) = neighboursMap[i](i,y,x);
+                if(yIndex < 0 || yIndex > maxY || xIndex < 0 || xIndex > maxX)
+                    continue;
+
+                var currentNeighbourValue = matrixGraph[yIndex][xIndex];
+                if(currentNeighbourValue == currentNodeValue)
+                    queue.Enqueue($"{xIndex},{yIndex}");
+            }
+        }
+
+        return hasIsland;
+    }
+    
     private static int CountNodesInConnectedComponent (Dictionary<string, List<string>?> graph, string startNode, HashSet<string> visitedNodes, int count = 1)
     {
         if(visitedNodes.TryGetValue(startNode,out string val))
@@ -260,7 +379,32 @@ public static class GraphAlgo
         Console.WriteLine($"GetConnectedComponentsCount => Expected: 2; Actual:{connectedComponentCount}");
 
         var largestComponentSize = GetLargestComponent(ExampleUnDirectedGraph);
-        Console.WriteLine($"GetLargestComponent => Expected:6, Actual:{largestComponentSize}");
+        Console.WriteLine($"GetLargestComponent => Expected:6, Actual:{largestComponentSize}"); 
+        
+        var shortestPath = GetShortestPath(ExampleArrayOfEdges,"i","l");
+        Console.WriteLine($"GetLargestComponent => Expected:2, Actual:{shortestPath}");
+        shortestPath = GetShortestPath(ExampleArrayOfEdges,"i","o");
+        Console.WriteLine($"GetLargestComponent => Expected:-1, Actual:{shortestPath}");
+
+        var islandCount = GetIslandCount(new List<List<int>> 
+        {
+            new List<int>{0,0,1,0,1},
+            new List<int>{0,0,1,1,0},
+            new List<int>{0,1,0,0,0},
+        });
+        Console.WriteLine($"{nameof(GetIslandCount)} => Expected:3, Actual:{islandCount}");
+        ///     ["1","1","1","1","0"],
+    ///     ["1","1","0","1","0"],
+    ///     ["1","1","0","0","0"],
+    ///     ["0","0","0","0","0"]
+        islandCount = GetIslandCount(new List<List<int>> 
+        {
+            new List<int>{1,1,1,1,0},
+            new List<int>{1,1,0,1,0},
+            new List<int>{1,1,0,0,0},
+            new List<int>{0,0,0,0,0},
+        });
+        Console.WriteLine($"{nameof(GetIslandCount)} => Expected:1, Actual:{islandCount}");
 
     }
 }
