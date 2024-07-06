@@ -253,6 +253,65 @@ public static class GraphAlgo
         return islandCount;
     }
 
+    /// <summary>
+    /// Given an m x n 2D binary grid grid which represents a map of 'L's (land) and 'W's (water), return the number of islands.
+    /// An island is surrounded by water and is formed by connecting adjacent lands horizontally or vertically. 
+    /// You may assume all four edges of the grid are all surrounded by water.
+    /// Example 1:
+    /// Input: grid = 
+    ///  [
+    ///     ["L","L","L","L","W"],
+    ///     ["L","L","W","L","W"],
+    ///     ["L","L","W","W","W"],
+    ///     ["W","W","W","W","W"]
+    ///  ]
+    /// Output: 1
+    /// </summary>
+    /// <param name="matrixGraph"></param>
+    /// <returns></returns>
+
+    public static int GetIslandCount(List<List<string>> matrixGraph)
+	{
+		var count = 0;
+		var rowCount = matrixGraph.Count;
+		var columnCount = matrixGraph[0].Count;
+		var visitedNodes = new HashSet<string> {};
+		for(var r = 0; r < rowCount; r++)
+		{
+			for(var c = 0; c < columnCount; c++)
+			{
+				var currentNode = matrixGraph[r][c];
+				if(currentNode == "W" || visitedNodes.Contains($"{r},{c}")) 
+					continue;
+				
+				count++;
+				TransverseLand(r,c,matrixGraph,visitedNodes);
+			}
+		}
+		return count;
+	}
+	
+	public static void TransverseLand(int row, int column,List<List<string>> matrixGraph, HashSet<string> visitedNodes)
+	{
+		
+		if(visitedNodes.Contains($"{row},{column}"))
+		   return;
+
+        visitedNodes.Add($"{row},{column}");
+		   
+		if(row - 1 >= 0 &&  matrixGraph[row - 1][column] == "L" )
+			TransverseLand(row - 1, column, matrixGraph, visitedNodes);
+
+		if(row + 1 < matrixGraph.Count &&  matrixGraph[row + 1][column] == "L" )
+			TransverseLand(row + 1, column, matrixGraph, visitedNodes);
+		
+		if(column - 1 >= 0 &&  matrixGraph[row][column - 1] == "L" )
+			TransverseLand(row, column - 1, matrixGraph, visitedNodes);
+		
+		if(column + 1 < matrixGraph[0].Count &&  matrixGraph[row][column + 1] == "L" )
+			TransverseLand(row, column + 1, matrixGraph, visitedNodes);
+	} 
+
     private static bool Transverse2DMaxtrix(List<List<int>> matrixGraph,int y,int x, List<string> visitedNodes)
     {
         var maxY = matrixGraph.Count() - 1;
@@ -388,22 +447,37 @@ public static class GraphAlgo
 
         var islandCount = GetIslandCount(new List<List<int>> 
         {
-            new List<int>{0,0,1,0,1},
-            new List<int>{0,0,1,1,0},
-            new List<int>{0,1,0,0,0},
+            new() {0,0,1,0,1},
+            new() {0,0,1,1,0},
+            new() {0,1,0,0,0},
         });
         Console.WriteLine($"{nameof(GetIslandCount)} => Expected:3, Actual:{islandCount}");
-        ///     ["1","1","1","1","0"],
-    ///     ["1","1","0","1","0"],
-    ///     ["1","1","0","0","0"],
-    ///     ["0","0","0","0","0"]
+        
         islandCount = GetIslandCount(new List<List<int>> 
         {
-            new List<int>{1,1,1,1,0},
-            new List<int>{1,1,0,1,0},
-            new List<int>{1,1,0,0,0},
-            new List<int>{0,0,0,0,0},
+            new() {1,1,1,1,0},
+            new() {1,1,0,1,0},
+            new() {1,1,0,0,0},
+            new() {0,0,0,0,0},
         });
+        Console.WriteLine($"{nameof(GetIslandCount)} => Expected:1, Actual:{islandCount}");
+
+        var islandCount2 = GetIslandCount(new List<List<string>> 
+        {
+            new() {"W","W","L","W","L"},
+            new() {"W","W","L","L","W"},
+            new() {"W","L","W","W","W"},
+        });
+        Console.WriteLine($"{nameof(GetIslandCount)} => Expected:3, Actual:{islandCount2}");
+
+        islandCount2 = GetIslandCount(new List<List<string>> 
+        {
+            new() {"L","L","L","L","W"},
+            new() {"L","L","W","L","W"},
+            new() {"L","L","W","W","W"},
+            new() {"W","W","W","W","W"},
+        });
+
         Console.WriteLine($"{nameof(GetIslandCount)} => Expected:1, Actual:{islandCount}");
 
     }
